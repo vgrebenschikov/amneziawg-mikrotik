@@ -1,0 +1,29 @@
+services:
+  bld:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+      platforms:
+        - linux/arm/v7
+      tags: 
+        - amneziawg-mikrotik-build:latest
+
+  img:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm/v7
+      tags:
+        - amneziawg-mikrotik:latest
+      
+    depends_on:
+      - bld
+
+
+# How to prepare image:
+#
+# docker compose build
+# docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
+#
+# scp amneziawg-mikrotik.tar <router-ip>:
