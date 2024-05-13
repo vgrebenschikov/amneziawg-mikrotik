@@ -1,10 +1,25 @@
-FROM amneziawg-mikrotik-build:latest as awg
+FROM golang:1.20 as awggo
+COPY . /awg
+WORKDIR /awg
+RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && \
+    cd amneziawg-go && \
+    go mod download && \
+    go mod verify && \
+    go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -v -o /usr/bin
+
+FROM alpine:3.19 as awgtools
+ARG AWGTOOLS_RELEASE="1.0.20240213"
+RUN apk --no-cache add iproute2 bash && \
+    apk update && apk add git linux-headers alpine-sdk && \
+    git clone https://github.com/amnezia-vpn/amneziawg-tools && \
+    cd amneziawg-tools/src && \
+    make all install
 
 FROM alpine:3.19
 RUN apk --no-cache add iproute2 bash openresolv && apk update 
 
-COPY --from=awg /usr/bin/amneziawg-go /usr/bin/amneziawg-go
-COPY --from=awg /usr/bin/awg /usr/bin/awg
+COPY --from=awggo /usr/bin/amneziawg-go /usr/bin/amneziawg-go
+COPY --from=awgtools /usr/bin/awg /usr/bin/awg
 COPY awg-quick /usr/bin/awg-quick
 
 RUN  ln -s /usr/bin/awg /usr/bin/wg && \

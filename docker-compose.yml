@@ -1,13 +1,4 @@
 services:
-  bld:
-    build:
-      context: .
-      dockerfile: Dockerfile.build
-      platforms:
-        - linux/arm/v7
-      tags: 
-        - amneziawg-mikrotik-build:latest
-
   img:
     build:
       context: .
@@ -16,10 +7,10 @@ services:
         - linux/arm/v7
       tags:
         - amneziawg-mikrotik:latest
-      
-    depends_on:
-      - bld
 
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
 
 # How to prepare image:
 #
