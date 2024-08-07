@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       platforms:
         - linux/arm/v7
+#        - linux/amd64
       tags:
         - amneziawg-mikrotik:latest
 
