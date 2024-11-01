@@ -27,10 +27,17 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    - name: Get version from git
+      id: git_version
+      run: echo "VERSION=$(git describe --tags --always | sed 's/\.0-/./')" >> $GITHUB_ENV
+
+
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
         context: .
         platforms: linux/arm/v7
         push: true
-        tags: vgrebenschikov/amneziawg-mikrotik:latest
+        tags: |
+          vgrebenschikov/amneziawg-mikrotik:latest
+          vgrebenschikov/amneziawg-mikrotik:${{ env.VERSION }}
