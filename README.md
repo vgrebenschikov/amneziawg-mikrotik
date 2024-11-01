@@ -1,6 +1,6 @@
 # How to setup AmneziaWG on Microtik router
 
-## Prepare image
+## Build Image
 
 1. Build image for container, matching your architecure, tested on ARMv7 for RB4011.
 2. Then save built image into tar archive.
@@ -13,6 +13,23 @@ $ docker compose build
 
 $ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
 
+$ scp amneziawg-mikrotik.tar mikrotik:
+```
+
+or, instead, you can download image as explained below:
+
+## Download Image
+
+You can pull image from dockerhub as usual, do not forget to specify correct
+platform:
+
+- linux/arm/v7 -> for ARM-based routers, i.e. RB4011
+- linux/amd64 -> for x86-64 routers, like CHR
+
+```shell
+
+$ docker pull --platform linux/arm/v7 vgrebenschikov/amneziawg-mikrotik:latest
+$ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
 $ scp amneziawg-mikrotik.tar mikrotik:
 ```
 
@@ -79,6 +96,12 @@ awg:/# awg-quick strip awg0 | wg setconf awg0 /dev/stdin
 ```
 
 Or you can restart contaner with `/container/stop 0` and then `/container/start 0`
+
+To force container run on start - set start-on-boot=yes:
+
+```shell
+/container/set 0 start-on-boot=yes
+```
 
 ## Be careful
 
