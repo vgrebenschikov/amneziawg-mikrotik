@@ -103,8 +103,16 @@ To force container run on start - set start-on-boot=yes:
 /container/set 0 start-on-boot=yes
 ```
 
-## Be careful
+## Firewall usege to distinguish in-tunnel and endpoint traffic
 
-awg-quick script is modified not to use firewall, 
-so if you going to use default route into awg tunnel in container,
-make sure that you route endpoint of other end of tunnel to the eth0 interface with additional route command.
+awg-quick script is modified not to use firewall marks as they are not supported in ROS containers.
+Instead you can use following config to setup awg0 table, and use it for awg0 routes and send all transit traffic recieved on eth0 to awg0:
+
+```shell
+[Interface]
+...
+
+Table = awg0
+PostUp = ip rule add priority 300 from all iif eth0 lookup awg0 || true
+PostDown = ip rule del from all iif eth0 lookup awg0 || true
+```
