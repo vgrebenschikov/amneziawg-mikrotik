@@ -24,7 +24,8 @@ COPY awg-quick /usr/bin/awg-quick
 
 RUN  ln -s /usr/bin/awg /usr/bin/wg && \
      ln -s /usr/bin/awg-quick /usr/bin/wg-quick && \
-     mkdir -p /etc/amnezia/amneziawg/
+     mkdir -p /etc/amnezia/amneziawg/ /etc/iproute2/ && \
+     echo "100 awg0" >> /etc/iproute2/rt_tables
 
 RUN (echo "[Interface]" && \
      echo "PrivateKey = $(wg genkey)" && \
