@@ -81,9 +81,9 @@ interface: awg0
   h4: 1453478960
 ```
 
-## (Re)Configuration 
+## (Re)Configuration
 
-You can login into container as shown above and can edit config as 
+You can login into container as shown above and can edit config as
 
 ```shell
 awg:/# vi /etc/amnezia/amneziawg/awg0.conf
