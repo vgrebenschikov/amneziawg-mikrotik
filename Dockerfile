@@ -1,4 +1,4 @@
-FROM golang:1.22 as awggo
+FROM golang:1.22 AS awggo
 COPY . /awg
 WORKDIR /awg
 RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && \
@@ -7,7 +7,7 @@ RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && \
     go mod verify && \
     go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -v -o /usr/bin
 
-FROM alpine:3.19 as awgtools
+FROM alpine:3.19 AS awgtools
 ARG AWGTOOLS_RELEASE="1.0.20240213"
 RUN apk --no-cache add iproute2 bash && \
     apk update && apk add git linux-headers alpine-sdk && \
