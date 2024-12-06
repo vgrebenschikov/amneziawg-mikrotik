@@ -1,45 +1,16 @@
 # How to setup AmneziaWG on Microtik router
 
-## Build Image
-
-1. Build image for container, matching your architecure, tested on ARMv7 for RB4011.
-2. Then save built image into tar archive.
-3. Then send the archive into router with scp or through Winbox.
-
-```shell
-$ docker compose build
-[+] Building 71.2s
-...
-
-$ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
-
-$ scp amneziawg-mikrotik.tar mikrotik:
-```
-
-or, instead, you can download image as explained below:
-
-## Download Image
-
-You can pull image from dockerhub as usual, do not forget to specify correct
-platform:
-
-- linux/arm/v7 -> for ARM-based routers, i.e. RB4011
-- linux/amd64 -> for x86-64 routers, like CHR
-
-```shell
-
-$ docker pull --platform linux/arm/v7 vgrebenschikov/amneziawg-mikrotik:latest
-$ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
-$ scp amneziawg-mikrotik.tar mikrotik:
-```
-
 ## Configure Mikrotik router
 
 1. Setup Containers on mikrotik accoring to [Mikrotik Container](https://help.mikrotik.com/docs/display/ROS/Container)
 
 2. Configure AWG container
 
+It will download container image from hub.docker.io, below there is
+explanation how to build and install image yourself
+
 ```shell
+
 /interface veth
 add address=10.0.1.11/24 gateway=10.0.1.1 name=veth1
 
@@ -56,7 +27,10 @@ add interface=containers list=LAN
 add dst=/etc/amnezia name=awg-conf src=/awg-conf comment="AmneziaWG etc"
 
 /container
-add file=amneziawg-mikrotik.tar hostname=awg interface=veth1 mounts=awg-conf root-dir=/awg
+config set registry-url=https://registry-1.docker.io tmpdir=/images/pull
+
+/container
+add remote-image=vgrebenschikov/amneziawg-mikrotik:latest hostname=awg interface=veth1 mounts=awg-conf root-dir=/awg
 ```
 
 3. Start Container
@@ -80,6 +54,48 @@ interface: awg0
   h3: 3054654459
   h4: 1453478960
 ```
+
+## Build Image
+
+1. Build image for container, matching your architecure, tested on ARMv7 for RB4011.
+2. Then save built image into tar archive.
+3. Then send the archive into router with scp or through Winbox.
+
+```shell
+$ docker compose build
+[+] Building 71.2s
+...
+
+$ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
+
+$ scp amneziawg-mikrotik.tar mikrotik:
+```
+
+If you sent container image that way to mikrotik - use following command to
+create container (file= instead of remote-image=)
+
+```
+/container
+add file=amneziawg-mikrotik.tar hostname=awg interface=veth1 mounts=awg-conf root-dir=/awg
+```
+
+or, instead, you can download image as explained below:
+
+## Download Image Manualy
+
+You can pull image from dockerhub as usual, do not forget to specify correct
+platform:
+
+- linux/arm/v7 -> for ARM-based routers, i.e. RB4011
+- linux/amd64 -> for x86-64 routers, like CHR
+
+```shell
+
+$ docker pull --platform linux/arm/v7 vgrebenschikov/amneziawg-mikrotik:latest
+$ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
+$ scp amneziawg-mikrotik.tar mikrotik:
+```
+
 
 ## (Re)Configuration
 
