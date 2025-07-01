@@ -1,13 +1,13 @@
-# How to setup AmneziaWG on Microtik router
+# How to set up AmneziaWG on Mikrotik router
 
 ## Configure Mikrotik router
 
-1. Setup Containers on mikrotik accoring to [Mikrotik Container](https://help.mikrotik.com/docs/display/ROS/Container)
+1. Set up Containers on Mikrotik according to [Mikrotik Container](https://help.mikrotik.com/docs/display/ROS/Container)
 
 2. Configure AWG container
 
-It will download container image from hub.docker.io, below there is
-explanation how to build and install image yourself
+It will download the container image from hub.docker.io. Below is an
+explanation of how to build and install the image yourself.
 
 ```shell
 
@@ -57,9 +57,9 @@ interface: awg0
 
 ## Build Image
 
-1. Build image for container, matching your architecure, tested on ARMv7 for RB4011.
-2. Then save built image into tar archive.
-3. Then send the archive into router with scp or through Winbox.
+1. Build the image for the container, matching your architecture (tested on ARMv7 for RB4011).
+2. Then save the built image into a tar archive.
+3. Then send the archive to the router with scp or through Winbox.
 
 ```shell
 $ docker compose build
@@ -71,58 +71,57 @@ $ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
 $ scp amneziawg-mikrotik.tar mikrotik:
 ```
 
-If you sent container image that way to mikrotik - use following command to
-create container (file= instead of remote-image=)
+If you sent the container image that way to Mikrotik, use the following command to
+create the container (file= instead of remote-image=):
 
-```
+```shell
 /container
 add file=amneziawg-mikrotik.tar hostname=awg interface=veth1 mounts=awg-conf root-dir=/awg
 ```
 
-or, instead, you can download image as explained below:
+or, instead, you can download the image as explained below:
 
-## Download Image Manualy
+## Download Image Manually
 
-You can pull image from dockerhub as usual, do not forget to specify correct
+You can pull the image from Docker Hub as usual. Do not forget to specify the correct
 platform:
 
 - linux/arm/v7 -> for ARM-based routers, i.e. RB4011
 - linux/amd64 -> for x86-64 routers, like CHR
 
 ```shell
-
 $ docker pull --platform linux/arm/v7 vgrebenschikov/amneziawg-mikrotik:latest
 $ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
 $ scp amneziawg-mikrotik.tar mikrotik:
 ```
 
-
 ## (Re)Configuration
 
-You can login into container as shown above and can edit config as
+You can log into the container as shown above and edit the config as follows:
 
 ```shell
+/container shell 0
 awg:/# vi /etc/amnezia/amneziawg/awg0.conf
 ```
 
-to apply new configuration you can run following command (as usual for awg):
+To apply the new configuration, you can run the following command (as usual for awg):
 
 ```shell
 awg:/# awg-quick strip awg0 | wg setconf awg0 /dev/stdin
 ```
 
-Or you can restart contaner with `/container/stop 0` and then `/container/start 0`
+Or you can restart the container with `/container/stop 0` and then `/container/start 0`
 
-To force container run on start - set start-on-boot=yes:
+To force the container to run on start, set start-on-boot=yes:
 
 ```shell
 /container/set 0 start-on-boot=yes
 ```
 
-## Firewall usege to distinguish in-tunnel and endpoint traffic
+## Firewall usage to distinguish in-tunnel and endpoint traffic
 
-awg-quick script is modified not to use firewall marks as they are not supported in ROS containers.
-Instead you can use following config to setup awg0 table, and use it for awg0 routes and send all transit traffic recieved on eth0 to awg0:
+The awg-quick script is modified not to use firewall marks as they are not supported in ROS containers.
+Instead, you can use the following config to set up the awg0 table, and use it for awg0 routes and send all transit traffic received on eth0 to awg0:
 
 ```shell
 [Interface]
