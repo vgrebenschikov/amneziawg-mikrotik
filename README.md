@@ -6,54 +6,84 @@
 
 2. Configure AWG container
 
-It will download the container image from hub.docker.io. Below is an
-explanation of how to build and install the image yourself.
+    It will download the container image from hub.docker.io. Below is an
+    explanation of how to build and install the image yourself.
 
-```shell
+    ```shell
 
-/interface veth
-add address=10.0.1.11/24 gateway=10.0.1.1 name=veth1
+    /interface veth
+    add address=10.0.1.11/24 gateway=10.0.1.1 name=awg0
 
-/interface bridge
-add name=containers port-cost-mode=short
+    /ip address
+    add address=10.0.1.1/24 interface=awg0
 
-/interface bridge port
-add bridge=containers interface=veth1 internal-path-cost=10 path-cost=10
+    /interface list member
+    add interface=awg0 list=WAN
 
-/interface list member
-add interface=containers list=LAN
+    /container mounts
+    add dst=/etc/amnezia name=awg0-conf src=/awg0-conf comment="awg0 /etc"
 
-/container mounts
-add dst=/etc/amnezia name=awg-conf src=/awg-conf comment="AmneziaWG etc"
+    /container
+    config set registry-url=https://registry-1.docker.io tmpdir=/images/pull
 
-/container
-config set registry-url=https://registry-1.docker.io tmpdir=/images/pull
-
-/container
-add remote-image=vgrebenschikov/amneziawg-mikrotik:latest hostname=awg interface=veth1 mounts=awg-conf root-dir=/awg
-```
+    /container
+    add name=awg0 remote-image=vgrebenschikov/amneziawg-mikrotik:latest hostname=awg0 interface=awg0 mounts=awg0-conf root-dir=/awg0
+    ```
 
 3. Start Container
 
-```shell
-/container start 0
+    ```shell
+    /container start 0
 
-/container shell 0
-awg:/# wg show
-interface: awg0
-  public key: Pwdoq...=
-  private key: (hidden)
-  listening port: 55656
-  jc: 11
-  jmin: 33
-  jmax: 1030
-  s1: 70
-  s2: 167
-  h1: 2068080600
-  h2: 636451746
-  h3: 3054654459
-  h4: 1453478960
+    /container shell 0
+    awg:/# wg show
+    interface: awg0
+    public key: Pwdoq...=
+    private key: (hidden)
+    listening port: 55656
+    jc: 11
+    jmin: 33
+    jmax: 1030
+    s1: 70
+    s2: 167
+    h1: 2068080600
+    h2: 636451746
+    h3: 3054654459
+    h4: 1453478960
+    ```
+
+## Configuration Tweaks
+
+If you have peer endpoint as DNS name and you wish to check if IP address was changed (DDNS scenarion).
+You may use Interface section config option `CheckPeerDNS = <poll-interval>`, as
+
+```shell
+[Interface]
+PrivateKey = GGs...
+Address = 10.0.1.11/24
+ListenPort = 12345
+
+Jc = 7
+Jmin = 55
+Jmax = 1000
+S1 = 77
+S2 = 122
+H1 = 100...
+H2 = 735...
+H3 = 223...
+H4 = 273...
+
+CheckPeerDNS = 300
+
+[Peer]
+PublicKey = Pw...
+PresharedKey = ...
+AllowedIPs = 0.0.0.0/0
+Endpoint = my.dynamic.server.name:12345
 ```
+
+With such configuration, awg-quick script will check if DNS name was changes every 5 min,
+and if changed, configure new endpoint IP address.
 
 ## Build Image
 
@@ -90,9 +120,9 @@ platform:
 - linux/amd64 -> for x86-64 routers, like CHR
 
 ```shell
-$ docker pull --platform linux/arm/v7 vgrebenschikov/amneziawg-mikrotik:latest
-$ docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
-$ scp amneziawg-mikrotik.tar mikrotik:
+docker pull --platform linux/arm/v7 vgrebenschikov/amneziawg-mikrotik:latest
+docker save amneziawg-mikrotik:latest > amneziawg-mikrotik.tar
+scp amneziawg-mikrotik.tar mikrotik:
 ```
 
 ## (Re)Configuration
@@ -104,10 +134,10 @@ You can log into the container as shown above and edit the config as follows:
 awg:/# vi /etc/amnezia/amneziawg/awg0.conf
 ```
 
-To apply the new configuration, you can run the following command (as usual for awg):
+To apply the new configuration, you can run the following command:
 
 ```shell
-awg:/# awg-quick strip awg0 | wg setconf awg0 /dev/stdin
+awg:/# awg-reload
 ```
 
 Or you can restart the container with `/container/stop 0` and then `/container/start 0`

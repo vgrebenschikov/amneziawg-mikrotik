@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+IF="${1:-awg0}"
+awg setconf $IF <(awg-quick strip $IF)

@@ -26,6 +26,7 @@ SAVE_CONFIG=0
 CONFIG_FILE=""
 PROGRAM="${0##*/}"
 ARGS=( "$@" )
+CHECK_PEER_DNS=""
 
 declare -A ROUTES
 
@@ -68,6 +69,7 @@ parse_options() {
 			PostUp) POST_UP+=( "$value" ); continue ;;
 			PostDown) POST_DOWN+=( "$value" ); continue ;;
 			SaveConfig) read_bool SAVE_CONFIG "$value"; continue ;;
+			CheckPeerDNS) CHECK_PEER_DNS="$value"; continue ;;
 			esac
         else
             case "$key" in
@@ -102,6 +104,7 @@ add_if() {
         if [ "$$" == "1" ]; then
             # running as init in container - run not detached to the script
             cmd "${WG_QUICK_USERSPACE_IMPLEMENTATION:-amneziawg-go}" -f "$INTERFACE" &
+            MY_PID=$!
             sleep 1
         else
             cmd "${WG_QUICK_USERSPACE_IMPLEMENTATION:-amneziawg-go}" $fore "$INTERFACE"
@@ -392,6 +395,13 @@ cmd_strip() {
 	echo "$WG_CONFIG"
 }
 
+cmd_peer_dns_watcher() {
+    while true; do
+        sleep $CHECK_PEER_DNS
+        /usr/bin/awg-check-peer-dns "$INTERFACE" || true
+    done
+}
+
 # ~~ function override insertion point ~~
 
 if [[ $# -eq 1 && ( $1 == --help || $1 == -h || $1 == help ) ]]; then
@@ -401,8 +411,13 @@ elif [[ $# -eq 2 && $1 == up ]]; then
 	parse_options "$2"
 	cmd_up
     if [ "$$" == "1" ]; then # runs as init of container
-        wait
+        if [[ -n $CHECK_PEER_DNS ]]; then
+            cmd_peer_dns_watcher &
+            WATCHER_PID=$!
+        fi
         sleep 1
+        wait $MY_PID
+        kill $WATCHER_PID 2> /dev/null|| true
     fi
 elif [[ $# -eq 2 && $1 == down ]]; then
 	auto_su

@@ -21,6 +21,8 @@ RUN apk --no-cache add iproute2 bash openresolv && apk update
 COPY --from=awggo /usr/bin/amneziawg-go /usr/bin/amneziawg-go
 COPY --from=awgtools /usr/bin/awg /usr/bin/awg
 COPY awg-quick /usr/bin/awg-quick
+COPY awg-check-peer-dns /usr/bin/awg-check-peer-dns
+COPY awg-reload /usr/bin/awg-reload
 
 RUN  ln -s /usr/bin/awg /usr/bin/wg && \
      ln -s /usr/bin/awg-quick /usr/bin/wg-quick && \

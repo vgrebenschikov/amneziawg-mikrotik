@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+IF="$1"
+
+set -e
+
+wg="awg"
+cd /etc/amnezia/amneziawg/
+
+# Input - WG config (either file or output of 'wg showconf <if>')
+# Output - lines with: <pubkey> <hostname> <port>
+wg_endpoints() {
+  awk '
+    BEGIN { RS=""; FS="\n" }
+    /Peer/ {
+      pk=""; ep=""
+      for (i = 1; i <= NF; i++) {
+        if ($i ~ /^PublicKey[ \t]*=/) {
+          pk = $i
+          sub(/^PublicKey[ \t]*=[ \t]*/, "", pk)
+        }
+        if ($i ~ /^Endpoint[ \t]*=/) {
+          ep = $i
+          sub(/^Endpoint[ \t]*=[ \t]*/, "", ep)
+          split(ep, parts, ":")
+          host = parts[1]
+          port = parts[2]
+        }
+      }
+      if (pk != "" && host != "" && port != "") {
+        print pk, host, port
+      }
+    }
+  '
+}
+
+
+$wg showconf "$IF" | wg_endpoints | while read -r pk h p; do
+  cfg_host=$(< "${IF}.conf" wg_endpoints | grep "$pk" | grep " $p" | cut -d' ' -f2)
+
+  if [[ "$cfg_host" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    # IP address - nothing to do
+    exit
+  fi
+
+  cfg_ip=$(nslookup "$cfg_host" 2>/dev/null | awk '/^Address: / { print $2 }' | head -n 1)
+
+  if [ "$h" = "$cfg_ip" ]; then
+    # echo "$pk matches ${h}:${p}"
+    :
+  else
+    echo "$pk missmatches: $h != $cfg_ip ($cfg_host)"
+    $wg set "$IF" peer "$pk" endpoint "$cfg_host:$p"
+  fi
+done
