@@ -1,4 +1,4 @@
-FROM golang:1.22 AS awggo
+FROM golang:1.24 AS awggo
 COPY . /awg
 WORKDIR /awg
 RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && \
