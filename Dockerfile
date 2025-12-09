@@ -3,16 +3,18 @@ COPY . /awg
 WORKDIR /awg
 RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && \
     cd amneziawg-go && \
+    git checkout v0.2.16 && \
     go mod download && \
     go mod verify && \
     go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -v -o /usr/bin
 
 FROM alpine:3.19 AS awgtools
-ARG AWGTOOLS_RELEASE="1.0.20240213"
+ARG AWGTOOLS_RELEASE="v1.0.20250903"
 RUN apk --no-cache add iproute2 bash && \
     apk update && apk add git linux-headers alpine-sdk && \
     git clone https://github.com/amnezia-vpn/amneziawg-tools && \
     cd amneziawg-tools/src && \
+    git checkout ${AWGTOOLS_RELEASE} && \
     make all install
 
 FROM alpine:3.19

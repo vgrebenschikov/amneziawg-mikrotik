@@ -417,7 +417,7 @@ elif [[ $# -eq 2 && $1 == up ]]; then
         fi
         sleep 1
         wait $MY_PID
-        kill $WATCHER_PID 2> /dev/null|| true
+        kill $WATCHER_PID 2> /dev/null || true
     fi
 elif [[ $# -eq 2 && $1 == down ]]; then
 	auto_su

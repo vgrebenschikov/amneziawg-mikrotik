@@ -12,13 +12,13 @@
     ```shell
 
     /interface veth
-    add address=10.0.1.11/24 gateway=10.0.1.1 name=awg0
+    add address=10.0.1.11/24 gateway=10.0.1.1 name=veth-awg0
 
     /ip address
-    add address=10.0.1.1/24 interface=awg0
+    add address=10.0.1.1/24 interface=veth-awg0
 
     /interface list member
-    add interface=awg0 list=WAN
+    add interface=veth-awg0 list=WAN
 
     /container mounts
     add dst=/etc/amnezia name=awg0-conf src=/awg0-conf comment="awg0 /etc"
@@ -27,7 +27,7 @@
     config set registry-url=https://registry-1.docker.io tmpdir=/images/pull
 
     /container
-    add name=awg0 remote-image=vgrebenschikov/amneziawg-mikrotik:latest hostname=awg0 interface=awg0 mounts=awg0-conf root-dir=/awg0
+    add name=awg0 remote-image=vgrebenschikov/amneziawg-mikrotik:latest hostname=awg0 interface=veth-awg0 mounts=awg0-conf root-dir=/awg0
     ```
 
 3. Start Container
@@ -46,6 +46,8 @@
     jmax: 1030
     s1: 70
     s2: 167
+    s3: 31
+    s4: 11
     h1: 2068080600
     h2: 636451746
     h3: 3054654459
@@ -68,6 +70,8 @@ Jmin = 55
 Jmax = 1000
 S1 = 77
 S2 = 122
+S3 = 31
+S4 = 11
 H1 = 100...
 H2 = 735...
 H3 = 223...
@@ -106,7 +110,7 @@ create the container (file= instead of remote-image=):
 
 ```shell
 /container
-add file=amneziawg-mikrotik.tar hostname=awg interface=veth1 mounts=awg-conf root-dir=/awg
+add file=amneziawg-mikrotik.tar hostname=awg interface=veth-awg0 mounts=awg-conf root-dir=/awg
 ```
 
 or, instead, you can download the image as explained below:
